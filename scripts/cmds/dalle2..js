@@ -5,8 +5,8 @@ const baseApiUrl = async () => {
 }; 
 module.exports = {
   config: {
-    name: "dalle",
-    aliases: ["bing", "create", "imagine"],
+    name: "dalle2",
+    aliases: ["bing2", "create", "imagine"],
     version: "1.0",
     author: "Dipto",
     countDown: 15,
