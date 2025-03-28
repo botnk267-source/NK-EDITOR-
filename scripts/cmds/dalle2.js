@@ -1,12 +1,12 @@
-.cmd install dalle.js  const axios = require('axios');
+const axios = require('axios');
 const baseApiUrl = async () => {
   const base = await axios.get(`https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json`);
   return base.data.api;
 }; 
 module.exports = {
   config: {
-    name: "dalle2",
-    aliases: ["bing2", "create", "imagine"],
+    name: "dalle",
+    aliases: ["bing", "create", "imagine"],
     version: "1.0",
     author: "Dipto",
     countDown: 15,
