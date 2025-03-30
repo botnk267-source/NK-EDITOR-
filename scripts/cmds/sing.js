@@ -1,57 +1,58 @@
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+const axios = require("axios");
 
-const cacheFolder = path.join(__dirname, 'cache');
-if (!fs.existsSync(cacheFolder)) fs.mkdirSync(cacheFolder);
+const baseApiUrl = async () => {
+  const base = 'https://mahmud-sing.onrender.com';
+  return base;
+};
 
 module.exports = {
-  config: {
-    name: "sing",
-    aliases: ["singaudio"],
-    version: "3.0",
-    author: "Mahi",
-    description: "Search and play audio using Mahi's API",
-    category: "Music",
-    guide: "{pn} <song name>"
-  },
+    config: {
+        name: "sing",
+        version: "1.7",
+        author: "MahMUD", 
+        countDown: 10,
+        role: 0,
+        category: "music",
+        guide: "{p}sing [query]"
+    },
 
-  onStart: async function ({ api, event, args }) {
-    try {
-      if (!args.length) {
-        return api.sendMessage("❌ | Enter a song name to search.", event.threadID, event.messageID);
-      }
+    onStart: async function ({ api, event, args, message }) {
+        if (args.length === 0) {
+            return message.reply("❌ | Please provide a sing name janu.");
+        }
 
-      const query = encodeURIComponent(args.join(" "));
-      const res = await axios.get(`https://mahi-apis.onrender.com/api/sing?query=${query}`);
+        try {
+            const query = encodeURIComponent(args.join(" "));
+            const apiUrl = `${await baseApiUrl()}/sing?query=${query}`;
 
-      if (!res.data || !res.data.download_url) {
-        return api.sendMessage("❌ | No audio found for the given query.", event.threadID, event.messageID);
-      }
+            message.reply("𝐖𝐚𝐢𝐭 𝐤𝐨𝐫𝐨 𝐣𝐚𝐧 <😘");
 
-      const { title, duration, upload_date, download_url } = res.data;
+            const response = await axios.get(apiUrl, {
+                responseType: "stream",
+                headers: { "author": module.exports.config.author }
+            });
 
-      const fileName = `sing_audio_${Date.now()}.mp3`;
-      const filePath = path.join(cacheFolder, fileName);
+            console.log("Response:", response);
 
-      const audioStream = await axios.get(download_url, { responseType: 'stream' });
-      const writer = fs.createWriteStream(filePath);
-      audioStream.data.pipe(writer);
+            if (response.data.error) {
+                return message.reply(`❌ Error: ${response.data.error}`);
+            }
 
-      writer.on('finish', () => {
-        api.sendMessage({
-          body: `✅ Title: ${title}\n⏱ Duration: ${duration}\n📅 Uploaded: ${upload_date}`,
-          attachment: fs.createReadStream(filePath)
-        }, event.threadID, event.messageID);
-      });
+            message.reply({
+                body: `✅ Here's your song: ${args.join(" ")}`,
+                attachment: response.data
+            });
 
-      writer.on('error', () => {
-        api.sendMessage("❌ | Failed to download the audio file.", event.threadID, event.messageID);
-      });
+        } catch (error) {
+            console.error("Error:", error.message);
 
-    } catch (err) {
-      console.error("❌ Error in sing command:", err);
-      api.sendMessage("❌ | Something went wrong while processing your request.", event.threadID, event.messageID);
-    }
-  }
+            if (error.response) {
+                console.error("Response error data:", error.response.data);
+                console.error("Response status:", error.response.status);
+                return message.reply(`❌ Error: ${error.response.data.error || error.message}`);
+            }
+
+            message.reply("❌ An error occurred while processing your request.");
+        }
+    }
 };
